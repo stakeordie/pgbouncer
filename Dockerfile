@@ -1,20 +1,25 @@
-FROM pgbouncer/pgbouncer:latest
+FROM ubuntu:22.04
 
-USER root
+# Install PgBouncer
+RUN apt-get update && \
+    apt-get install -y pgbouncer && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Create config directory and copy our custom config
-RUN mkdir -p /etc/pgbouncer
+# Copy configuration files
 COPY pgbouncer.ini /etc/pgbouncer/pgbouncer.ini
 COPY userlist.txt /etc/pgbouncer/userlist.txt
 
-# Set proper permissions
-RUN chown -R pgbouncer:pgbouncer /etc/pgbouncer && \
-    chmod 644 /etc/pgbouncer/pgbouncer.ini && \
-    chmod 644 /etc/pgbouncer/userlist.txt
+# Create pgbouncer user and directories
+RUN useradd -r -s /bin/false pgbouncer && \
+    mkdir -p /var/log/pgbouncer && \
+    chown -R pgbouncer:pgbouncer /etc/pgbouncer /var/log/pgbouncer
 
-USER pgbouncer
-
+# Expose the port
 EXPOSE 5432
 
-# Bypass the entrypoint script and run pgbouncer directly with our config
+# Switch to pgbouncer user
+USER pgbouncer
+
+# Start PgBouncer
 CMD ["pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
