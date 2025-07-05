@@ -1,14 +1,6 @@
 FROM pgbouncer/pgbouncer:latest
 
-# Copy configuration files
-COPY pgbouncer.ini /etc/pgbouncer/pgbouncer.ini
-COPY userlist.txt /etc/pgbouncer/userlist.txt
+# Don't copy config files - let the entrypoint create them
+# The image will auto-generate config from environment variables
 
-# Create necessary directories
-RUN mkdir -p /var/log/pgbouncer
-
-# Expose the port
 EXPOSE 5432
-
-# Start PgBouncer
-CMD ["pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
