@@ -1,25 +1,25 @@
-FROM ubuntu:22.04
+FROM postgres:15-alpine
 
-# Install PgBouncer
-RUN apt-get update && \
-    apt-get install -y pgbouncer && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Install PgBouncer and postgresql-client
+RUN apk add --no-cache pgbouncer postgresql-client
 
-# Copy configuration files
+# Copy config files
 COPY pgbouncer.ini /etc/pgbouncer/pgbouncer.ini
 COPY userlist.txt /etc/pgbouncer/userlist.txt
 
-# Create pgbouncer user and directories
-RUN useradd -r -s /bin/false pgbouncer && \
-    mkdir -p /var/log/pgbouncer && \
-    chown -R pgbouncer:pgbouncer /etc/pgbouncer /var/log/pgbouncer
+# Create pgbouncer user and set permissions
+RUN adduser -D -s /bin/sh pgbouncer && \
+    chown -R pgbouncer:pgbouncer /etc/pgbouncer
 
-# Expose the port
 EXPOSE 5432
 
-# Switch to pgbouncer user
+# Test script
+RUN echo '#!/bin/sh' > /test-connection.sh && \
+    echo 'echo "Testing PgBouncer connection..."' >> /test-connection.sh && \
+    echo 'psql "postgresql://postgres:BFKhIErfHuyMJSOGQqNuTweKjoubHOGS@localhost:5432/railway" -c "SELECT 1;"' >> /test-connection.sh && \
+    chmod +x /test-connection.sh
+
 USER pgbouncer
 
-# Start PgBouncer
-CMD ["pgbouncer", "/etc/pgbouncer/pgbouncer.ini"]
+# Start PgBouncer in background and run test
+CMD ["sh", "-c", "pgbouncer /etc/pgbouncer/pgbouncer.ini & sleep 5 && /test-connection.sh && wait"]
