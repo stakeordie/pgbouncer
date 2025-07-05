@@ -7,9 +7,8 @@ RUN apk add --no-cache pgbouncer postgresql-client
 COPY pgbouncer.ini /etc/pgbouncer/pgbouncer.ini
 COPY userlist.txt /etc/pgbouncer/userlist.txt
 
-# Create pgbouncer user and set permissions
-RUN adduser -D -s /bin/sh pgbouncer && \
-    chown -R pgbouncer:pgbouncer /etc/pgbouncer
+# Set permissions (user already exists)
+RUN chown -R pgbouncer:pgbouncer /etc/pgbouncer
 
 EXPOSE 5432
 
